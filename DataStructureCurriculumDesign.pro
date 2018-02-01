@@ -25,10 +25,22 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    classScheduleLink.cpp \
+    classScheduleMat.cpp \
+    roominfo.cpp \
+    room.cpp \
+    student.cpp \
+    teacher.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    classschedule.h \
+    classScheduleLink.h \
+    classScheduleMat.h \
+    room.h \
+    teacher.h \
+    student.h
 
 FORMS += \
         mainwindow.ui

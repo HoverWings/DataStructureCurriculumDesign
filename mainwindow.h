@@ -15,6 +15,10 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+private slots:
+
+    void setcomBox();//init the comBox
+    
 private:
     Ui::MainWindow *ui;
 };
