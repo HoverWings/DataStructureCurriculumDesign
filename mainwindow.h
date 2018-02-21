@@ -2,9 +2,17 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QFileDialog>
+#include <QAxObject>
+#include <QVariant>
+#include "readexcel.h"
+#include <QDebug>
+#include "excelengine.h"
 
-namespace Ui {
-class MainWindow;
+
+namespace Ui
+{
+    class MainWindow;
 }
 
 class MainWindow : public QMainWindow
@@ -16,9 +24,10 @@ public:
     ~MainWindow();
 
 private slots:
+    void on_chooseStudentButton_clicked();
 
-    void setcomBox();//init the comBox
-    
+    void on_loadStudentButton_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

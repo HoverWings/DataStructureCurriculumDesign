@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
-
+QT       += axcontainer
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = DataStructureCurriculumDesign
@@ -28,19 +28,21 @@ SOURCES += \
         mainwindow.cpp \
     classScheduleLink.cpp \
     classScheduleMat.cpp \
-    roominfo.cpp \
     room.cpp \
     student.cpp \
-    teacher.cpp
+    teacher.cpp \
+    readexcel.cpp \
+    excelengine.cpp
 
 HEADERS += \
         mainwindow.h \
-    classschedule.h \
     classScheduleLink.h \
     classScheduleMat.h \
     room.h \
     teacher.h \
-    student.h
+    student.h \
+    readexcel.h \
+    excelengine.h
 
 FORMS += \
         mainwindow.ui
