@@ -1,12 +1,14 @@
 #include "student.h"
 
+stuLink stuL;
+
 bool addStu(studentInfo ** headStu, studentInfo * stu)
 {
 	studentInfo* now = (*headStu);
 	if (now == NULL)
 	{
 		(*headStu) = stu;	
-		stuNum++;
+		stuL.stuNum++;
 		return true;
 	}
 	while (now->nextStu!=NULL)
@@ -14,18 +16,19 @@ bool addStu(studentInfo ** headStu, studentInfo * stu)
 		now = now->nextStu;
 	}
 	now->nextStu = stu;
-	stuNum++;
+	stuL.stuNum++;
 	return true;
 }
 
 bool deleteStu(studentInfo ** headStu, char * stuName)
 {
+
 	studentInfo* now = (*headStu);
 	if (strcmp(now->stuName, stuName) == 0)
 	{
 		(*headStu)->nextStu = now->nextStu;
 		free(now);
-		stuNum--;
+		stuL.stuNum--;
 		return true;
 	}
 	studentInfo* pre = findPreStu(*headStu, stuName);
@@ -38,7 +41,7 @@ bool deleteStu(studentInfo ** headStu, char * stuName)
 		now = pre->nextStu;
 		pre->nextStu = now->nextStu;
 		free(now);
-		stuNum--;
+		stuL.stuNum--;
 		return true;
 	}
 	return false;

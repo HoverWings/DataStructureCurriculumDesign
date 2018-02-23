@@ -1,5 +1,5 @@
-#ifndef ROOMINFO_H
-#define ROOMINFO_H
+#ifndef ROOM_H
+#define ROOM_H
 
 #include "classScheduleLink.h"
 
@@ -10,7 +10,7 @@ typedef struct roomInfo
     bool isUsed=false;             //表示当前是否被占用
     int roomArea;                  //表示区域 如0表示N/1表示S
     int roomNum;                   //教室编号
-    classInfo* nextClass=NULL;     //当前周的第一节课/下一节课
+    //classInfo* nextClass=NULL;     //当前周的第一节课/下一节课
     roomInfo* nextRoom=NULL;       //当前教学楼的下一间房间编号
 }roomInfo;
 
@@ -25,4 +25,4 @@ bool addRoom(buildingInfo** building,roomInfo* room);
 bool deleteRoomByPre(buildingInfo** building, roomInfo*pre);
 roomInfo* findPreRoom(buildingInfo* building, int roomArea, int roomNum);	//找到当前教室的前驱
 
-#endif  ROOMINFO_H
+#endif //ROOM_H

@@ -16,7 +16,7 @@ typedef struct classMat
 bool loadFromFile();
 
 
-#endif  CLASSSCHEDULELMAT_H
+#endif  //CLASSSCHEDULELMAT_H
 
 
 

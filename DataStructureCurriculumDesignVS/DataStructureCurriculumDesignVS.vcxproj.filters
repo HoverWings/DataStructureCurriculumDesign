@@ -15,33 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\room.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\student.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\teacher.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\classScheduleLink.h">
+    <ClInclude Include="fun.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\classScheduleLink.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\room.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\student.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\teacher.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="test.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="fun.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

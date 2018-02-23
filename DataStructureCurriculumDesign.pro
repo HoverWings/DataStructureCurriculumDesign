@@ -31,8 +31,7 @@ SOURCES += \
     room.cpp \
     student.cpp \
     teacher.cpp \
-    readexcel.cpp \
-    excelengine.cpp
+    course.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -41,8 +40,7 @@ HEADERS += \
     room.h \
     teacher.h \
     student.h \
-    readexcel.h \
-    excelengine.h
+    course.h
 
 FORMS += \
         mainwindow.ui

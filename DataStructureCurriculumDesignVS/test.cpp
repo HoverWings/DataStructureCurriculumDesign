@@ -1,9 +1,6 @@
-#include"room.h"
-#include"student.h"
-#include"teacher.h"
-#include"stdio.h"
+#include"fun.h"
 
 int main()
 {
-
+	printf("hello world\n ");
 }

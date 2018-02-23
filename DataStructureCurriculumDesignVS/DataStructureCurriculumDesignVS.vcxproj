@@ -99,6 +99,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Projects\DataStructureCurriculumDesign\DataStructureCurriculumDesign</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -136,16 +137,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\classScheduleLink.h" />
-    <ClInclude Include="..\room.h" />
-    <ClInclude Include="..\student.h" />
-    <ClInclude Include="..\teacher.h" />
+    <ClInclude Include="fun.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\classScheduleLink.cpp" />
-    <ClCompile Include="..\room.cpp" />
-    <ClCompile Include="..\student.cpp" />
-    <ClCompile Include="..\teacher.cpp" />
+    <ClCompile Include="fun.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
