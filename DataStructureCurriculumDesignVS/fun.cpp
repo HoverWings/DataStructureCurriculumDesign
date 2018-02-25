@@ -1,16 +1,32 @@
 #include"fun.h"
 
+extern buildingInfo Buildings[50];
+extern int BuildingCount;
 extern courseInfo allCourse[50];
 extern stuLink stuL;
+extern tchLink tchL;
 
-bool addStu(studentInfo ** headStu, studentInfo * stu)
+#pragma region StuFun
+
+bool newStu(studentInfo** stu)
 {
-	studentInfo* now = (*headStu);
+	(*stu) = (studentInfo *)malloc(sizeof(studentInfo));
+	(*stu)->nextStu = NULL;
+	(*stu)->stuFirstClass=NULL;
+	(*stu)->stuLastClass=NULL;
+	return true;
+}
+
+//D:添加Stu入StuL，维护链表和节点的stuNum
+bool addStu(stuLink * stuL, studentInfo * stu)
+{
+	studentInfo* now = stuL->headStu;
 	if (now == NULL)
 	{
-		(*headStu) = stu;
-		stuL.stuNum++;
-		stu->stuNum = stuL.stuNum;
+		stuL->headStu = stu;
+		stuL->stuNum++;
+		stu->stuNum = stuL->stuNum;
+		//now->nextStu=NULL;
 		return true;
 	}
 	while (now->nextStu != NULL)
@@ -18,20 +34,20 @@ bool addStu(studentInfo ** headStu, studentInfo * stu)
 		now = now->nextStu;
 	}
 	now->nextStu = stu;
-	stuL.stuNum++;
-	stu->stuNum = stuL.stuNum;
+	stuL->stuNum++;
+	stu->stuNum = stuL->stuNum;
 	return true;
 }
 
-bool deleteStu(studentInfo ** headStu, char * stuName)
+bool deleteStu(stuLink * stuL, char * stuName)
 {
-	studentInfo* now = (*headStu);
+	studentInfo* now = stuL->headStu;
 	if (strcmp(now->stuName, stuName) == 0)
 	{
-		(*headStu)= now->nextStu;
+		stuL->headStu= now->nextStu;
 		free(now);
-		stuL.stuNum--;
-		now = (*headStu);
+		stuL->stuNum--;
+		now = stuL->headStu;
 		while (now != NULL)//维护班级编号 从1开始
 		{
 			now->stuNum--;
@@ -39,7 +55,7 @@ bool deleteStu(studentInfo ** headStu, char * stuName)
 		}
 		return true;
 	}
-	studentInfo* pre = findPreStu(*headStu, stuName);
+	studentInfo* pre = findPreStu(stuL->headStu, stuName);
 	if (pre == NULL)
 	{
 		return false;
@@ -55,10 +71,27 @@ bool deleteStu(studentInfo ** headStu, char * stuName)
 			now->stuNum--;
 			now = now->nextStu;
 		}
-		stuL.stuNum--;
+		stuL->stuNum--;
 		return true;
 	}
 	return false;
+}
+
+bool showStu(stuLink * stuL)
+{
+	studentInfo* stu = stuL->headStu;
+	if (stu == NULL)
+	{
+		return false;
+	}
+	printf("班级总数:%d\n", stuL->stuNum);
+	while (stu!=NULL)
+	{
+		printf("班级编号:%d", stu->stuNum);
+		printf("\t班级名称:%s\n", stu->stuName);
+		stu = stu->nextStu;
+	}
+	return true;;
 }
 
 //C:headStu不为空
@@ -113,16 +146,74 @@ studentInfo* findStuByIndex(studentInfo * headStu, int stuNum)
 	return stu;
 }
 
-extern tchLink tchL;
-
-bool addTch(teacherInfo ** headTch, teacherInfo * tch)
+//D:增加教学楼
+buildingInfo* addBuilding(char * buildingName,bool isZoned)
 {
-	teacherInfo* now = (*headTch);
+	BuildingCount++;
+	buildingInfo* pB = &Buildings[BuildingCount];
+	strcpy(pB->buildingName, buildingName);
+	pB->buildingNum = BuildingCount;
+	pB->firstRoom = NULL;
+	pB->roomCount = 0;
+	return pB;
+}
+
+//D: 删除教学楼 调用deleteRoomInBuilding删除教学楼中的教室 同时删除与教室相关的课程
+bool deleteBuilding(int index)
+{
+	buildingInfo* pB = &Buildings[index];
+	if(pB->firstRoom!=NULL)
+	{
+		roomInfo* pr = pB->firstRoom;
+		for (int i = 1; i <= pB->roomCount; i++)
+		{
+			deleteRoomInBuilding(pB, pr->roomArea, pr->roomNum);
+		}
+	}
+	//所有后面的后移
+	for (int i = index; i < BuildingCount; i++)
+	{
+		Buildings[i] = Buildings[i + 1];
+		Buildings[i].buildingNum = i;
+	}
+	BuildingCount--;
+	return true;
+}
+
+bool showBuilding()
+{
+	buildingInfo* pB = NULL;
+	for (int i = 1; i <= BuildingCount; i++)
+	{
+		pB = &Buildings[i];
+		showRoom(pB);
+	}
+	return true;
+}
+
+
+
+#pragma endregion
+
+#pragma region TchFun
+
+bool newTch(teacherInfo ** tch)
+{
+	(*tch) = (teacherInfo *)malloc(sizeof(teacherInfo));
+	(*tch)->nextTch = NULL;
+	(*tch)->firstClass = NULL;
+	(*tch)->lastClass = NULL;
+	return true;
+}
+
+bool addTch(tchLink * tchL, teacherInfo * tch)
+{
+	teacherInfo* now = tchL->headTch;
 	if (now == NULL)	//头指针为空
 	{
-		(*headTch) = tch;
-		tchL.tchNum++;
-		tch->tchNum = tchL.tchNum;
+		tchL->headTch = tch;
+		tchL->tchNum++;
+		tch->tchNum = tchL->tchNum;
 		return true;
 	}
 	while (now->nextTch != NULL)
@@ -130,20 +221,22 @@ bool addTch(teacherInfo ** headTch, teacherInfo * tch)
 		now = now->nextTch;
 	}
 	now->nextTch = tch;//在末尾插入
-	tchL.tchNum++;
-	tch->tchNum = tchL.tchNum;
+	tchL->tchNum++;
+	tch->tchNum = tchL->tchNum;
 	return true;
 }
 
-bool deleteTch(teacherInfo ** headTch, char * tchName)
+//D;从教师链表中删除tch 同时删除tch的所有课程
+bool deleteTch(tchLink * tchL, char * tchName)
 {
-	teacherInfo* now = (*headTch);
+	teacherInfo* now = tchL->headTch;
 	if (strcmp(now->tchName, tchName) == 0)//头指针删除
 	{
-		(*headTch) = now->nextTch;
+		tchL->headTch = now->nextTch;
+		deleteTchClass(now);
 		free(now);
-		tchL.tchNum--;
-		now = (*headTch);
+		tchL->tchNum--;
+		now = tchL->headTch;
 		while (now!=NULL)//维护教师编号 从1开始
 		{
 			now->tchNum--;
@@ -151,7 +244,7 @@ bool deleteTch(teacherInfo ** headTch, char * tchName)
 		}
 		return true;
 	}
-	teacherInfo* pre = findPreTch(*headTch, tchName);
+	teacherInfo* pre = findPreTch(tchL->headTch, tchName);
 	if (pre == NULL)
 	{
 		return false;
@@ -160,6 +253,7 @@ bool deleteTch(teacherInfo ** headTch, char * tchName)
 	{
 		now = pre->nextTch;
 		pre->nextTch = now->nextTch;
+		deleteTchClass(now);
 		free(now);
 		now = pre->nextTch;
 		while (now != NULL)
@@ -167,10 +261,39 @@ bool deleteTch(teacherInfo ** headTch, char * tchName)
 			now->tchNum--;
 			now = now->nextTch;
 		}
-		tchL.tchNum--;
+		tchL->tchNum--;
 		return true;
 	}
 	return false;
+}
+
+bool deleteTchClass(teacherInfo * tch)
+{
+	assert(tch != NULL);
+	classInfo* tchClass = tch->firstClass;
+	while (tchClass!=NULL)
+	{
+		deleteClass(tchClass->course, tchClass);
+		tchClass = tchClass->nextTchClass;
+	}
+	return true;
+}
+
+bool showTch(tchLink * tchL)
+{
+	teacherInfo* tch = tchL->headTch;
+	if (tch == NULL)
+	{
+		return false;
+	}
+	printf("教师总数:%d\n", tchL->tchNum);
+	while (tch != NULL)
+	{
+		printf("教师编号:%d", tch->tchNum);
+		printf("\t教师名称:%s\n", tch->tchName);
+		tch = tch->nextTch;
+	}
+	return true;;
 }
 
 teacherInfo * findTch(teacherInfo * headTch, char * tchName)
@@ -223,7 +346,20 @@ teacherInfo* findTchByIndex(teacherInfo * headTch, int tchNum)
 	return tch;
 }
 
+#pragma endregion
 
+#pragma region RoomFun
+
+
+//D:new一个Room
+bool newRoom(roomInfo ** room)
+{
+	(*room) = (roomInfo *)malloc(sizeof(roomInfo));
+	(*room)->firstClass = NULL;
+	(*room)->lastClass = NULL;
+	(*room)->nextRoom = NULL;
+	return true;
+}
 
 //C:教学楼中无此教室
 bool addRoom(buildingInfo ** building, roomInfo * room)
@@ -240,16 +376,73 @@ bool addRoom(buildingInfo ** building, roomInfo * room)
 			r = r->nextRoom;
 		}
 		r->nextRoom = room;
+		(*building)->roomCount++;
 	}
 	return false;
 }
 
-//C:当前教学楼中有此教室 pre=NULL则说明仅仅只有一个教室
+//D:在building中删除room 同时调用deleteClass删除所有与之相关的class
+bool deleteRoomInBuilding(buildingInfo * building, int roomArea, int roomNum)
+{
+	roomInfo * pre= NULL;
+	roomInfo * room = NULL;
+	classInfo* roomClass = NULL;
+	pre=findPreRoom(building,roomArea,roomArea);
+	if(pre==NULL)
+	{
+		if((*building).roomCount!=1)//没有前驱，则仅仅只能有一个教室
+		{
+			return false;
+		}
+	}
+	room = pre->nextRoom;
+	roomClass = room->firstClass;
+	while (roomClass != NULL)
+	{
+		deleteClass(roomClass->course, roomClass);
+		roomClass = roomClass->nextRoomClass;
+	}
+	return	deleteRoomByPre(&building,pre);
+}
+
+bool showRoom(buildingInfo * building)
+{
+	printf("教学楼编号:%d 教学楼名称:%s 教室数量:%d\n", building->buildingNum, building->buildingName, building->roomCount);
+	if (building->roomCount != 0)
+	{
+		printf("教学楼下的教室有:\n");
+		roomInfo * pr = building->firstRoom;
+		assert(pr != NULL);
+		while (pr != NULL)
+		{
+			if (building->isZoned)
+			{
+				if (pr->roomArea == 0)
+				{
+					printf("N%d", pr->roomNum);
+				}
+				else
+				{
+					printf("S%d", pr->roomNum);
+				}
+			}
+			else
+			{
+				printf("%d", pr->roomNum);
+			}
+		}
+	}
+	return false;
+}
+
+
+//C:当前教学楼中有此教室 pre=NULL则说明仅仅只有一个教室 
 bool deleteRoomByPre(buildingInfo **building, roomInfo * pre)
 {
-	if (pre == NULL)
+	if (pre == NULL&&(*building)->roomCount==1)	//仅仅只有一个教室
 	{
 		free((*building)->firstRoom);
+		(*building)->firstRoom=NULL;
 		return true;
 	}
 	roomInfo* now = pre->nextRoom;
@@ -289,6 +482,7 @@ roomInfo * findPreRoom(buildingInfo * building, int roomArea, int roomNum)
 }
 
 
+#pragma endregion
 
 
 //D:ClassInfo比较，若B比A大返回True,否则返回False
@@ -874,7 +1068,6 @@ classInfo * findPreClassInCourse(courseInfo * course,classInfo* nowClass)
 	return NULL;
 }
 
-
 //D:在stu链表中找到class的前驱
 //C:存在前驱，即不为first且存在
 //I:stu,nowClass
@@ -1060,7 +1253,7 @@ classInfo * isExistedClassInRoom(roomInfo * room, classInfo * insertClass)
 }
 
 //D:new一个course
-courseInfo * newCourse(int beginWeek, int endWeek, int courseHour, char * courseName, int tchNum, int * tchNums, int stuNum, int * stuNums)
+courseInfo * newCourse(int beginWeek, int endWeek, int courseHour, char * courseName, int tchNum, int * tchNums, int stuNum, int * stuNums, int courseFragmentNum,timeFragment* courseFragment)
 {
 	courseInfo* insertCourse = (courseInfo*)malloc(sizeof(courseInfo));
 	if (insertCourse == NULL)
@@ -1068,11 +1261,15 @@ courseInfo * newCourse(int beginWeek, int endWeek, int courseHour, char * course
 		printf("内存已满，newCourse错误！\n");
 		return NULL;
 	}
-	insertCourse->beginWeek = beginWeek;
-	insertCourse->endWeek = endWeek;
+	insertCourse->firstWeek = beginWeek;
+	insertCourse->lastWeek = endWeek;
 	insertCourse->courseHour = courseHour;
 	strcpy(insertCourse->courseName, courseName);
 	insertCourse->tchNum = tchNum;
+	for (int i = 1; i < courseFragmentNum; i++)
+	{
+		insertCourse->courseFragment[i] = courseFragment[i];
+	}
 	for (int i = 1; i < tchNum; i++)
 	{
 		insertCourse->tchNums[i] = tchNums[i];
@@ -1122,17 +1319,178 @@ bool isEistedCourse(char * courseName, int stuNum, int *stuNums)
 //C:当前课程不存在，对于每一个课程所属的stu都需要调用添加课程
 //I:course,week,day,order,room
 //O:操作结果
-courseInfo * addCourse(int beginWeek, int endWeek, int courseHour, char * courseName, int tchNum, int * tchNums, int stuNum, int * stuNums)
+courseInfo * addCourse(int firstWeek, int lastWeek, int courseHour, char * courseName, int tchNum, int * tchNums, int stuNum, int * stuNums,  int courseFragmentNum, timeFragment* courseFragment)
 {
-	courseInfo* insertCourse = newCourse(beginWeek, endWeek, courseHour, courseName, tchNum, tchNums, stuNum, stuNums);//构建插入节点
+	courseInfo* insertCourse = newCourse(firstWeek, lastWeek, courseHour, courseName, tchNum, tchNums, stuNum, stuNums, courseFragmentNum,courseFragment);//构建插入节点
 	if (isEistedCourse(courseName, stuNum, stuNums))
 	{
 		printf("当前课程已存在或冲突！\n");
 		free(insertCourse);
 		return NULL;
 	}
+	for (int i = 1; i <= courseFragmentNum; i++)
+	{
+		timeFragment* tF = &(courseFragment[i]);
+		for (int j = tF->beginWeek; j <= tF->endWeek; j++)
+		{
+			if (addClass(insertCourse, j, tF->day, tF->order, tF->room) == NULL)
+			{
+				printf("插入错误！\n");
+			}
+		}
+	}
 	return insertCourse;
 }
 
+//需要存储：
+//stu链表
+//tch链表
+//course数组
+bool saveStuToDat()
+{
+	FILE *out;
+	if ((out = fopen("Data\\Stu.dat", "wb")) == NULL)
+		return false;
+	stuLink* pstuL= &stuL;
+	studentInfo* pStu = stuL.headStu;
+	fwrite(pstuL, sizeof(stuLink), 1, out);
+	while (pStu!=NULL)
+	{
+		fwrite(pStu, sizeof(studentInfo), 1, out);
+		pStu = pStu->nextStu;
+	}
+	fclose(out);
+	return true;
+}
+
+bool saveTchToDat()
+{
+	FILE *out;
+	if ((out = fopen("Data\\Tch.dat", "wb")) == NULL)
+		return false;
+	tchLink* ptchL = &tchL;
+	teacherInfo* pTch = tchL.headTch;
+	fwrite(ptchL, sizeof(tchLink), 1, out);
+	while (pTch != NULL)
+	{
+		fwrite(pTch, sizeof(teacherInfo), 1, out);
+		pTch = pTch->nextTch;
+	}
+	fclose(out);
+	return true;
+}
+
+bool saveRoomToDat()
+{
+	FILE *out;
+	if ((out = fopen("Data\\Building.dat", "wb")) == NULL)
+		return false;
+	fwrite(&BuildingCount, sizeof(int), 1, out);
+	buildingInfo* pB = Buildings;
+	for (int i = 1; i <= BuildingCount; i++)
+	{
+		pB = &Buildings[i];
+		roomInfo* pr = pB->firstRoom;
+		fwrite(pB, sizeof(buildingInfo), 1, out);
+		for (int j = 1; j <= pB->roomCount; j++)
+		{
+			fwrite(pr, sizeof(roomInfo), 1, out);
+			pr = pr->nextRoom;
+		}
+	}
+	fclose(out);
+	return true;
+}
+
+bool loadStuFromDat()
+{
+	FILE *in;
+	if ((in = fopen("Data\\Stu.dat", "wb")) == NULL)
+		return false;
+	stuLink* pstuL = &stuL;
+	studentInfo* pStu = NULL;
+	studentInfo* pre = NULL;
+	fread(pstuL, sizeof(stuLink),1, in);
+	for (int i = 1; i <= pstuL->stuNum; i++)
+	{
+		newStu(&pStu);
+		fread(pStu, sizeof(studentInfo), 1, in);
+		if (i == 1)
+		{
+			pstuL->headStu = pStu;
+			pre = pStu;
+		}
+		else
+		{
+			pre->nextStu = pStu;
+			pre = pStu;
+		}
+	}
+	pStu->nextStu = NULL;
+	fclose(in);
+	return true;
+}
+
+bool loadTchFromDat()
+{
+	FILE *in;
+	if ((in = fopen("Data\\Tch.dat", "wb")) == NULL)
+		return false;
+	tchLink* ptchL = &tchL;
+	teacherInfo* pTch = NULL;
+	teacherInfo* pre = NULL;
+	fwrite(ptchL, sizeof(tchLink), 1, in);
+	for (int i = 1; i <= ptchL->tchNum; i++)
+	{
+		newTch(&pTch);
+		fread(pTch, sizeof(teacherInfo), 1, in);
+		if (i == 1)
+		{
+			ptchL->headTch = pTch;
+			pre = pTch;
+		}
+		else
+		{
+			pre->nextTch = pTch;
+			pre = pTch;
+		}
+	}
+	pTch->nextTch = NULL;
+	fclose(in);
+	return true;
+}
+
+bool loadRoomFromDat()
+{
+	FILE *in;
+	if ((in = fopen("Data\\Tch.dat", "wb")) == NULL)
+		return false;
+	fread(&BuildingCount, sizeof(int), 1, in);
+	buildingInfo* pB = Buildings;
+	roomInfo* pr =NULL;
+	roomInfo* pre = NULL;
+	for (int i = 1; i <= BuildingCount; i++)
+	{
+		pB = &Buildings[i];	
+		fread(pB, sizeof(buildingInfo), 1, in);
+		for (int j = 1; j <= pB->roomCount; j++)//在一个building中读取room
+		{
+			newRoom(&pr);
+			fread(pr, sizeof(roomInfo), 1, in);
+			if (j == 1)
+			{
+				pB->firstRoom = pr;
+				pre = pr;
+			}
+			else
+			{
+				pre->nextRoom = pr;
+				pre = pr;
+			}
+		}
+	}
+	fclose(in);
+	return true;
+}
 
 

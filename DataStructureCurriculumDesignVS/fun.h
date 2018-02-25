@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<cstring>
 #include<malloc.h>
+#include<assert.h>
 
 /*
 注释说明：
@@ -30,9 +31,9 @@ OBJ:Objective 操作对象
 //define the Room Struct
 typedef struct roomInfo
 {
-	int buildingNum;						 //教学楼编号
+	int buildingNum;						 //教学楼编号 从1开始
 	bool isUsed[21][7][7] = { false };		 //表示当前是否被占用(需要考虑是否占用 缘由不那么重要)
-	int roomArea;							 //表示区域 如0表示N/1表示S
+	int roomArea;							 //表示区域 如0表示N 1表示S
 	int roomNum;							 //教室编号
 	struct classInfo* firstClass = NULL;     //第一节课   当前房间的课程链表
 	struct classInfo* lastClass = NULL;      //第一节课   当前房间的课程链表
@@ -41,10 +42,15 @@ typedef struct roomInfo
 
 typedef struct buildingInfo
 {
-	int buildingNum;                //教学楼编号
+	int buildingNum=-1;             //教学楼编号 为index
 	char buildingName[20];          //教学楼名称
+	int roomCount=0;				//教室计数
+	bool isZoned;					//是否分区 教室是否分NS 
 	roomInfo* firstRoom = NULL;
 }buildingInfo;
+
+static buildingInfo Buildings[50];	//所有building 数组
+static int BuildingCount = 0;
 #pragma endregion
 
 #pragma region classStu
@@ -96,8 +102,8 @@ typedef  struct studentInfo
 	int beginWeek = 0;							//开始有课周次 1-20
 	int endWeek = 0;							//开始无课周次 1-20
 	weekInfo weeks[25];							//二十周的课表数组 1-20
-	classInfo* stuFirstClass = NULL;		//日程链表 可获取开始周次
-	classInfo* stuLastClass = NULL;		//日程链表 可获取结束周次
+	classInfo* stuFirstClass = NULL;			//日程链表 可获取开始周次
+	classInfo* stuLastClass = NULL;				//日程链表 可获取结束周次
 	struct studentInfo* nextStu = NULL;		    //下一个班级	
 }studentInfo;
 
@@ -112,13 +118,27 @@ typedef struct stuLink
 static stuLink stuL;
 #pragma endregion
 
+
+typedef struct timeFragment
+{
+	int beginWeek;				//开始周次
+	int endWeek;				//结束周次 endWeek>=beginWeek
+	int day;					//星期1-7
+	int order;					//上课时间1-6
+	struct roomInfo* room;		//上课地点指针
+}timeFragment;
+
+
+
 #pragma region course
 typedef struct courseInfo
 {
 	//int courseNum;									//课程编号
 	char courseName[20];								//课程名称
-	int beginWeek;										//开始周次	统计数据输入
-	int endWeek;										//结束周次
+	int firstWeek=0;									//开始周次	统计数据输入
+	int lastWeek=0;										//结束周次
+	int courseFragmentNum=0;							//时间段数目
+	timeFragment courseFragment[5];						//关于上课的时间节点							
 	int courseHour;										//学时数	统计数据输入
 	int tchNum;											//教师数目
 	int tchNums[10];									//教师编号
@@ -157,49 +177,69 @@ static tchLink tchL;
 #pragma endregion
 
 //stu函数声明
-bool addStu(studentInfo** headStu, studentInfo* stu);					//增加班级
-bool deleteStu(studentInfo** headStu, char* stuName);					//删除班级
+bool newStu(studentInfo** stu);
+bool addStu(stuLink * stuL, studentInfo * stu);							//增加班级
+bool deleteStu(stuLink * stuL, char* stuName);							//删除班级
+bool showStu(stuLink * stuL);											//遍历班级
 studentInfo* findStu(studentInfo* headStu, char* stuName);				//找到当前班级
 studentInfo* findPreStu(studentInfo* headStu, char* stuName);			//找到当前班级的前驱
-studentInfo* findStuByIndex(studentInfo * headStu, int stuNum);			//根据stuNum找到stu
+studentInfo* findStuByIndex(studentInfo * headStu, int stuNum);			//根据stuNum找到stu 
 
+//building函数声明
+buildingInfo* addBuilding(char* buildingName,bool isZoned);
+bool deleteBuilding(int index);
+bool showBuilding();
 
-//room函数声明
+//·room函数声明
+bool newRoom(roomInfo** room);
 bool addRoom(buildingInfo** building, roomInfo* room);
+bool deleteRoomInBuilding(buildingInfo * building, int roomArea, int roomNum);		//删除教室
+bool showRoom(buildingInfo * building);
 bool deleteRoomByPre(buildingInfo** building, roomInfo*pre);
-roomInfo* findPreRoom(buildingInfo* building, int roomArea, int roomNum);	//找到当前教室的前驱
+roomInfo* findPreRoom(buildingInfo* building, int roomArea, int roomNum);			//找到当前教室的前驱
 
 
 //tch函数声明
-bool addTch(teacherInfo** headTch, teacherInfo* tch);					//增加教师
-bool deleteTch(teacherInfo** headTch, char* tchName);					//删除教师
+bool newTch(teacherInfo** tch);
+bool addTch(tchLink * tchL, teacherInfo* tch);							//增加教师
+bool deleteTch(tchLink * tchL, char* tchName);							//删除教师
+bool deleteTchClass(teacherInfo* tch);									//删除所有与此教师相关的课程
+bool showTch(tchLink * tchL);											//遍历教师
 teacherInfo* findTch(teacherInfo* headTch, char* tchName);				//找到当前教师
 teacherInfo* findPreTch(teacherInfo* headTch, char* tchName);			//找到当前教师的前驱
 teacherInfo* findTchByIndex(teacherInfo * headTch, int tchNum);			//根据tchNum找到tch
 		
 
-bool compareClass(classInfo* A, classInfo* B);
 
-//class函数声明
-//当前course存在
+																		//class函数声明
+bool compareClass(classInfo* A, classInfo* B);
 classInfo* addClass(courseInfo * course, int week, int day, int order, roomInfo* room);
 bool deleteClass(courseInfo * course, classInfo* deleteClass);
 
 
 
-
+classInfo * findPreClassInRoom(roomInfo * room, classInfo* nowClass);
 classInfo * findPreClassInStu(studentInfo * stu, classInfo* nowClass);	
 classInfo * findPreClassInStuByTime(studentInfo * stu, int week, int day, int order);
 
 classInfo* findFirstSameClassInStuByName(studentInfo* stu, char* className);		//根据日程遍历找到当前班级名称当前课程的第一节课指针
-
-
 classInfo* findFirstSameClassInWeek(studentInfo* stu, char* className,int week);		//需要查找当前课程的周次
+
 classInfo* isExistedClassInStu(studentInfo* stu,classInfo* insertClass);
 classInfo* isExistedClassInTch(teacherInfo* tch,classInfo* insertClass);
 classInfo* isExistedClassInRoom(roomInfo* room, classInfo* insertClass);
 
 
+courseInfo * newCourse(int beginWeek, int endWeek, int courseHour, char * courseName, int tchNum, int * tchNums, int stuNum, int * stuNums, int courseFragmentNum, timeFragment* courseFragment);
+courseInfo * addCourse(int firstWeek, int lastWeek, int courseHour, char * courseName, int tchNum, int * tchNums, int stuNum, int * stuNums, int courseFragmentNum, timeFragment* courseFragment);
 
-courseInfo* addCourse(int beginWeek, int endWeek, int courseHour, char* courseName, int tchNum, int* tchNums, int stuNum, int* stuNums);
+
+bool saveStuToDat();
+bool saveTchToDat();
+bool saveRoomToDat();
+
+bool loadStuFromDat();
+bool loadTchFromDat();
+bool loadRoomFromDat();
+
 
